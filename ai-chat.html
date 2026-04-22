@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusAI - Advanced Chat Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 25%, #0f1729 50%, #1a1f3a 75%, #0a0e27 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #e2e8f0;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        /* Animated background orbs */
+        .bg-orb-1 {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            top: -150px;
+            right: -150px;
+            animation: float 20s ease-in-out infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .bg-orb-2 {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            bottom: -200px;
+            left: -200px;
+            animation: float 25s ease-in-out infinite reverse;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) translateX(0px);
+            }
+            25% {
+                transform: translateY(-30px) translateX(20px);
+            }
+            50% {
+                transform: translateY(-60px) translateX(-20px);
+            }
+            75% {
+                transform: translateY(-30px) translateX(20px);
+            }
+        }
+
+        .loader-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #06b6d4, #0ea5e9);
+            display: inline-block;
+            margin: 0 3px;
+            animation: bounce 1.4s infinite ease-in-out;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+        }
+
+        .loader-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .loader-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% {
+                opacity: 0.4;
+                transform: scale(0.8) translateY(0);
+            }
+            40% {
+                opacity: 1;
+                transform: scale(1) translateY(-12px);
+            }
+        }
+
+        .message-user {
+            background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+            color: white;
+            border-radius: 20px 20px 4px 20px;
+            padding: 12px 16px;
+            max-width: 70%;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+            animation: slideInRight 0.4s ease-out;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .message-assistant {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: #e2e8f0;
+            border-radius: 20px 20px 20px 4px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 12px 16px;
+            max-width: 70%;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            animation: slideInLeft 0.4s ease-out;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .message-error {
+            background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+            color: #fca5a5;
+            border-radius: 16px;
+            border: 1px solid rgba(220, 38, 38, 0.5);
+            padding: 12px 16px;
+            max-width: 70%;
+            word-wrap: break-word;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.2);
+            animation: slideInLeft 0.4s ease-out;
+            font-size: 14px;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+            font-size: 15px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.6);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .input-field {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1.5px solid rgba(148, 163, 184, 0.3);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #e2e8f0;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .input-field:focus {
+            outline: none;
+            background: rgba(15, 23, 42, 0.95);
+            border-color: rgba(6, 182, 212, 0.8);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+        }
+
+        .input-field::placeholder {
+            color: rgba(148, 163, 184, 0.7);
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-gradient {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pulse {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        .emoji-icon {
+            font-size: 20px;
+            display: inline-block;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-gemini {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
+            color: #06b6d4;
+            border: 1px solid rgba(6, 182, 212, 0.4);
+        }
+
+        .badge-hf {
+            background: linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%);
+            color: #a855f7;
+            border: 1px solid rgba(168, 85, 247, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-orb-1"></div>
+    <div class="bg-orb-2"></div>
+    <div id="app" class="relative z-10"></div>
+
+    <script>
+        class AIChat {
+            constructor() {
+                this.messages = [];
+                this.input = '';
+                this.loading = false;
+                this.apiKey = '';
+                this.apiType = 'gemini';
+                this.apiConfigured = false;
+                this.error = '';
+                this.init();
+            }
+
+            init() {
+                this.render();
+                this.attachEventListeners();
+            }
+
+            setState(updates) {
+                Object.assign(this, updates);
+                this.render();
+                this.attachEventListeners();
+            }
+
+            attachEventListeners() {
+                if (!this.apiConfigured) {
+                    const configBtn = document.getElementById('configBtn');
+                    const apiTypeGemini = document.getElementById('apiTypeGemini');
+                    const apiTypeHF = document.getElementById('apiTypeHF');
+                    const apiKeyInput = document.getElementById('apiKeyInput');
+
+                    if (configBtn) configBtn.addEventListener('click', () => this.handleConfigureAPI());
+                    if (apiTypeGemini) apiTypeGemini.addEventListener('click', () => this.setState({ apiType: 'gemini', error: '' }));
+                    if (apiTypeHF) apiTypeHF.addEventListener('click', () => this.setState({ apiType: 'huggingface', error: '' }));
+                    if (apiKeyInput) {
+                        apiKeyInput.addEventListener('input', (e) => {
+                            this.apiKey = e.target.value;
+                        });
+                        apiKeyInput.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                this.handleConfigureAPI();
+                            }
+                        });
+                    }
+                } else {
+                    const form = document.getElementById('chatForm');
+                    const input = document.getElementById('messageInput');
+                    const changeBtn = document.getElementById('changeApiBtn');
+
+                    if (form) form.addEventListener('submit', (e) => this.handleSendMessage(e));
+                    if (input) {
+                        input.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                this.handleSendMessage(e);
+                            }
+                        });
+                    }
+                    if (changeBtn) changeBtn.addEventListener('click', () => this.setState({ apiConfigured: false, messages: [], error: '' }));
+
+                    setTimeout(() => {
+                        const messagesContainer = document.getElementById('messagesContainer');
+                        if (messagesContainer) {
+                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                        }
+                    }, 100);
+                }
+            }
+
+            handleConfigureAPI() {
+                const keyInput = document.getElementById('apiKeyInput');
+                if (keyInput) {
+                    this.apiKey = keyInput.value.trim();
+                }
+                
+                if (!this.apiKey || this.apiKey.length === 0) {
+                    this.setState({ error: 'Please paste your API key first' });
+                    return;
+                }
+                
+                if (this.apiKey.length < 10) {
+                    this.setState({ error: 'API key seems too short. Check if you copied it correctly.' });
+                    return;
+                }
+                
+                this.setState({ apiConfigured: true, error: '' });
+            }
+
+            async sendMessageToGemini(userMessage) {
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`;
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{
+                                    text: userMessage
+                                }]
+                            }],
+                            generationConfig: {
+                                temperature: 0.7,
+                                maxOutputTokens: 1024,
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        const errorMessage = errorData.error?.message || `Error: ${response.status}`;
+                        throw new Error(errorMessage);
+                    }
+
+                    const data = await response.json();
+                    const aiMessage = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    
+                    if (!aiMessage) {
+                        throw new Error('No response received from Gemini');
+                    }
+                    
+                    return aiMessage;
+                } catch (err) {
+                    throw new Error(`Gemini Error: ${err.message}`);
+                }
+            }
+
+            async sendMessageToHuggingFace(userMessage) {
+                try {
+                    const response = await fetch(
+                        'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1',
+                        {
+                            headers: { 
+                                Authorization: `Bearer ${this.apiKey}`,
+                                'Content-Type': 'application/json'
+                            },
+                            method: 'POST',
+                            body: JSON.stringify({ inputs: userMessage }),
+                        }
+                    );
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        const errorMsg = Array.isArray(errorData) ? errorData[0]?.error : errorData.error;
+                        throw new Error(errorMsg || `Error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    
+                    if (Array.isArray(data) && data[0]?.generated_text) {
+                        let aiMessage = data[0].generated_text.trim();
+                        if (aiMessage.includes(userMessage)) {
+                            aiMessage = aiMessage.split(userMessage).pop().trim();
+                        }
+                        if (!aiMessage) {
+                            throw new Error('No response received from Hugging Face');
+                        }
+                        return aiMessage;
+                    }
+                    
+                    throw new Error('Unexpected response format');
+                } catch (err) {
+                    throw new Error(`Hugging Face Error: ${err.message}`);
+                }
+            }
+
+            async handleSendMessage(e) {
+                e.preventDefault();
+                
+                if (!this.input.trim() || this.loading) return;
+
+                const userMessage = this.input;
+                const newMessages = [...this.messages, { role: 'user', content: userMessage }];
+                
+                this.setState({
+                    messages: newMessages,
+                    input: '',
+                    loading: true,
+                    error: ''
+                });
+
+                try {
+                    let aiMessage;
+                    
+                    if (this.apiType === 'gemini') {
+                        aiMessage = await this.sendMessageToGemini(userMessage);
+                    } else {
+                        aiMessage = await this.sendMessageToHuggingFace(userMessage);
+                    }
+
+                    this.setState({
+                        messages: [...newMessages, { role: 'assistant', content: aiMessage }],
+                        loading: false
+                    });
+                } catch (err) {
+                    console.error('Error:', err);
+                    this.setState({
+                        messages: [...newMessages, { role: 'error', content: err.message }],
+                        loading: false,
+                        error: err.message
+                    });
+                }
+            }
+
+            renderConfigScreen() {
+                return `
+                    <div class="min-h-screen flex items-center justify-center p-4">
+                        <div class="w-full max-w-md fade-in">
+                            <div class="card p-8">
+                                <div class="mb-8">
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <span class="emoji-icon">✨</span>
+                                        <h1 class="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">NexusAI</h1>
+                                    </div>
+                                    <p class="text-slate-400 text-sm">Unified AI Chat Interface</p>
+                                </div>
+
+                                <div class="space-y-5 mb-6">
+                                    <div>
+                                        <label class="block">
+                                            <span class="text-sm font-semibold text-slate-300 mb-3 block">Select Your AI Engine</span>
+                                            <div class="grid grid-cols-2 gap-3">
+                                                <button
+                                                    id="apiTypeGemini"
+                                                    class="relative p-4 rounded-14 border-2 transition-all duration-300 ${
+                                                        this.apiType === 'gemini'
+                                                            ? 'border-cyan-500 bg-cyan-500/10'
+                                                            : 'border-slate-600 hover:border-slate-500'
+                                                    }"
+                                                >
+                                                    <div class="emoji-icon text-2xl mb-2 block">🚀</div>
+                                                    <div class="font-semibold text-sm">Gemini</div>
+                                                    <div class="text-xs text-slate-500 mt-1">Ultra Fast</div>
+                                                </button>
+                                                <button
+                                                    id="apiTypeHF"
+                                                    class="relative p-4 rounded-14 border-2 transition-all duration-300 ${
+                                                        this.apiType === 'huggingface'
+                                                            ? 'border-purple-500 bg-purple-500/10'
+                                                            : 'border-slate-600 hover:border-slate-500'
+                                                    }"
+                                                >
+                                                    <div class="emoji-icon text-2xl mb-2 block">🤗</div>
+                                                    <div class="font-semibold text-sm">HuggingFace</div>
+                                                    <div class="text-xs text-slate-500 mt-1">Open Source</div>
+                                                </button>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div>
+                                        <label class="block">
+                                            <span class="text-sm font-semibold text-slate-300 mb-2 block">API Key</span>
+                                            <input
+                                                id="apiKeyInput"
+                                                type="password"
+                                                placeholder="${this.apiType === 'gemini' ? 'Paste your Gemini API key...' : 'Paste your HuggingFace token...'}"
+                                                class="input-field w-full"
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <div class="bg-slate-900/50 border border-slate-700 rounded-12 p-3">
+                                        <p class="text-xs text-slate-400 leading-relaxed">
+                                            ${this.apiType === 'gemini' 
+                                                ? `<span class="text-cyan-400 font-semibold">Get free API key:</span><br><a href="https://makersuite.google.com/app/apikey" target="_blank" class="text-cyan-400 hover:underline">makersuite.google.com/app/apikey</a>`
+                                                : `<span class="text-purple-400 font-semibold">Get free token:</span><br><a href="https://huggingface.co/settings/tokens" target="_blank" class="text-purple-400 hover:underline">huggingface.co/settings/tokens</a>`
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+
+                                ${this.error ? `
+                                    <div class="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-12 text-sm text-red-400 flex items-start gap-2">
+                                        <span class="mt-0.5">⚠️</span>
+                                        <span>${this.error}</span>
+                                    </div>
+                                ` : ''}
+
+                                <button
+                                    id="configBtn"
+                                    class="btn-primary w-full flex items-center justify-center gap-2"
+                                >
+                                    <span>🔓</span>
+                                    <span>Start Chatting</span>
+                                </button>
+
+                                <div class="mt-4 text-xs text-slate-500 text-center">
+                                    <p>Your API key is used locally only</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderChatScreen() {
+                return `
+                    <div class="flex flex-col h-screen bg-gradient-to-b from-slate-900/50 to-slate-800/30">
+                        <!-- Header -->
+                        <div class="header-gradient backdrop-blur-md">
+                            <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between h-20">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-12 bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg">
+                                        ⚡
+                                    </div>
+                                    <div>
+                                        <h1 class="text-xl font-bold text-white">NexusAI</h1>
+                                        <p class="text-xs text-slate-400">
+                                            <span class="badge ${this.apiType === 'gemini' ? 'badge-gemini' : 'badge-hf'}">
+                                                ${this.apiType === 'gemini' ? '🚀 Gemini' : '🤗 HuggingFace'}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    id="changeApiBtn"
+                                    class="px-4 py-2 text-slate-300 hover:text-white text-sm font-semibold transition-all hover:bg-slate-700/50 rounded-10 flex items-center gap-2"
+                                >
+                                    <span>⚙️</span>
+                                    <span>Switch</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Messages -->
+                        <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 scroll-smooth">
+                            <div class="max-w-4xl mx-auto space-y-4">
+                                ${this.messages.length === 0 ? `
+                                    <div class="h-full flex items-center justify-center">
+                                        <div class="text-center fade-in">
+                                            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center text-5xl border border-cyan-500/30">
+                                                💬
+                                            </div>
+                                            <h2 class="text-2xl font-bold text-white mb-2">Welcome to NexusAI</h2>
+                                            <p class="text-slate-400 max-w-xs mx-auto">Start a conversation with ${this.apiType === 'gemini' ? 'Google Gemini' : 'Mistral AI'} powered by Hugging Face</p>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    ${this.messages.map((msg, idx) => `
+                                        <div class="flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}">
+                                            <div class="message-${msg.role}">
+                                                ${msg.content}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                    ${this.loading ? `
+                                        <div class="flex justify-start">
+                                            <div style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 20px 20px 20px 4px; padding: 12px 16px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);">
+                                                <div class="loader-dot"></div>
+                                                <div class="loader-dot"></div>
+                                                <div class="loader-dot"></div>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                `}
+                            </div>
+                        </div>
+
+                        <!-- Input Area -->
+                        <div class="bg-slate-900/50 backdrop-blur-md border-t border-slate-700/50">
+                            <form id="chatForm" class="max-w-4xl mx-auto px-4 py-4">
+                                <div class="flex gap-3 items-center">
+                                    <div class="flex-1 relative">
+                                        <input
+                                            id="messageInput"
+                                            type="text"
+                                            placeholder="Type your message or ask a question..."
+                                            ${this.loading ? 'disabled' : ''}
+                                            class="input-field w-full pr-12"
+                                        />
+                                        <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
+                                            ✍️
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        ${this.loading || !this.input.trim() ? 'disabled' : ''}
+                                        class="btn-primary px-6 flex items-center justify-center gap-2 flex-shrink-0"
+                                    >
+                                        <span>📤</span>
+                                        <span class="hidden sm:inline">Send</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+            }
+
+            render() {
+                const app = document.getElementById('app');
+                app.innerHTML = this.apiConfigured ? this.renderChatScreen() : this.renderConfigScreen();
+            }
+        }
+
+        let chat = new AIChat();
+    </script>
+</body>
+</html>
