@@ -1,48 +1,80 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Gemini Chat Tester</title>
+  <title>Gemini Chat (Free Tier)</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #111; color: #eee; }
+    textarea, input { width: 100%; margin: 10px 0; padding: 10px; }
+    button { padding: 10px 20px; cursor: pointer; }
+    #chat { white-space: pre-wrap; border: 1px solid #444; padding: 10px; height: 300px; overflow-y: auto; }
+  </style>
 </head>
 <body>
 
-<h2>Gemini Chat</h2>
+<h2>Gemini Chat (Free Tier)</h2>
 
-<input type="text" id="apikey" placeholder="Paste your Gemini API key" size="50"><br><br>
+<input type="text" id="apikey" placeholder="Paste Gemini API Key (AIza...)" />
 
-<textarea id="input" placeholder="Type your message..." rows="4" cols="50"></textarea><br><br>
+<div id="chat"></div>
 
+<textarea id="input" placeholder="Type your message..."></textarea>
 <button onclick="sendMessage()">Send</button>
 
-<h3>Response:</h3>
-<pre id="output"></pre>
-
 <script>
+let history = [];
+
 async function sendMessage() {
   const apiKey = document.getElementById("apikey").value;
   const userInput = document.getElementById("input").value;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+  if (!apiKey || !userInput) return;
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{ text: userInput }]
-      }]
-    })
+  const chatBox = document.getElementById("chat");
+
+  // Show user message
+  chatBox.innerHTML += "\nYou: " + userInput + "\n";
+
+  history.push({
+    role: "user",
+    parts: [{ text: userInput }]
   });
 
-  const data = await response.json();
+  document.getElementById("input").value = "";
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
   try {
-    document.getElementById("output").innerText =
-      data.candidates[0].content.parts[0].text;
-  } catch (e) {
-    document.getElementById("output").innerText =
-      "Error: " + JSON.stringify(data, null, 2);
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contents: history
+      })
+    });
+
+    const data = await response.json();
+
+    let reply = "Error";
+
+    if (data.candidates && data.candidates.length > 0) {
+      reply = data.candidates[0].content.parts[0].text;
+    } else {
+      reply = JSON.stringify(data, null, 2);
+    }
+
+    chatBox.innerHTML += "Gemini: " + reply + "\n";
+
+    history.push({
+      role: "model",
+      parts: [{ text: reply }]
+    });
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+  } catch (err) {
+    chatBox.innerHTML += "Error: " + err + "\n";
   }
 }
 </script>
